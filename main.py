@@ -4,7 +4,7 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 
 # 🔹 텔레그램 설정
-TOKEN = "8618774145:AAEEgEAgn4EGbnXLEOoeODiMEPevHa3leZo"
+TOKEN = "여기에_토큰"
 CHAT_ID = "7543066255"
 
 def send_telegram(message):

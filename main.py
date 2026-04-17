@@ -3,16 +3,12 @@ import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import threading
 
-# 🔹 텔레그램 설정
-TOKEN = "여기에_토큰"
+TOKEN = "8618774145:AAEEgEAgn4EGbnXLEOoeODiMEPevHa3leZo"
 CHAT_ID = "7543066255"
 
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{TOKEN}/sendMessage"
-    data = {
-        "chat_id": CHAT_ID,
-        "text": message
-    }
+    data = {"chat_id": CHAT_ID, "text": message}
     requests.post(url, data=data)
 
 # 🔹 웹서버 (Render용)
@@ -23,11 +19,9 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(b"OK")
 
 def run_server():
-    port = 10000
-    server = HTTPServer(("0.0.0.0", port), Handler)
+    server = HTTPServer(("0.0.0.0", 10000), Handler)
     server.serve_forever()
 
-# 🔥 서버 먼저 실행 (중요)
 threading.Thread(target=run_server).start()
 
 # 🔹 코인 리스트
@@ -35,17 +29,19 @@ url = "https://api.upbit.com/v1/market/all"
 data = requests.get(url).json()
 krw_coins = [coin['market'] for coin in data if coin['market'].startswith("KRW-")]
 
-# 🔹 변수들
+# 🔹 저장 변수
 previous_prices = {}
 previous_volumes = {}
 accumulation_count = {}
 trend_count = {}
 alerted_time = {}
 
+# 🔹 BTC 변수
 btc_prev_price = None
 btc_trend = 0
 
 while True:
+    # 🔹 BTC 체크
     try:
         btc_data = requests.get(
             "https://api.upbit.com/v1/ticker",
@@ -64,6 +60,7 @@ while True:
 
     btc_prev_price = btc_price
 
+    # 🔹 코인 데이터
     try:
         prices = requests.get(
             "https://api.upbit.com/v1/ticker",
@@ -92,19 +89,36 @@ while True:
         change = ((current_price - old_price) / old_price) * 100
         volume_change = (volume - old_volume) / old_volume if old_volume > 0 else 0
 
+        # 🔥 상승 유지
         trend_count[name] = trend_count[name] + 1 if change > 0.5 else 0
-        accumulation_count[name] = accumulation_count[name] + 1 if abs(change) < 1 and volume_change > 1 else 0
 
+        # 🔥 매집 감지
+        if abs(change) < 0.5 and volume_change > 1:
+            accumulation_count[name] += 1
+        else:
+            accumulation_count[name] = 0
+
+        # 🔥 고래 돌파 (강화)
         if (
-            accumulation_count[name] >= 1
-            and trend_count[name] >= 0.5
-            and volume_change > 0.5
-            and btc_trend >= 0.5
+            accumulation_count[name] >= 1 and
+            trend_count[name] >= 0.5 and
+            volume_change > 0.5 and
+            btc_trend >= 0.5
         ):
             now = time.time()
 
-            if name not in alerted_time or now - alerted_time[name] > 300:
-                msg = f"🚨 {name} 돌파! {change:.2f}%"
+            if name not in alerted_time or now - alerted_time[name] > 600:
+                msg = f"""
+🚨 고래 돌파 감지
+
+코인: {name}
+상승률: {change:.2f}%
+매집: {accumulation_count[name]}회
+거래량 증가: {volume_change:.2f}
+BTC 흐름: 상승
+
+🔥 진짜 시작 구간
+"""
                 print(msg)
                 send_telegram(msg)
 

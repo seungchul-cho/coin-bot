@@ -96,10 +96,10 @@ while True:
         accumulation_count[name] = accumulation_count[name] + 1 if abs(change) < 1 and volume_change > 1 else 0
 
         if (
-            accumulation_count[name] >= 3
-            and trend_count[name] >= 2
-            and volume_change > 2
-            and btc_trend >= 2
+            accumulation_count[name] >= 1
+            and trend_count[name] >= 0.5
+            and volume_change > 0.5
+            and btc_trend >= 0.5
         ):
             now = time.time()
 

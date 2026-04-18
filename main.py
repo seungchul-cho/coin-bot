@@ -63,7 +63,7 @@ while True:
             trend_count[name] = 0
 
         # 🔥 진짜 급등만
-        if change > 1.5 and volume > 50000 and trend_count[name] >= 3:
+        if change > 1.0 and volume > 50000 and trend_count[name] >= 2:
             now = time.time()
 
             if name not in alerted_time or now - alerted_time[name] > 300:
